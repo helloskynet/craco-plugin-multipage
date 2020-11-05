@@ -1,7 +1,7 @@
-const fs = require("fs");
-const path = require("path");
-const { flatten } = require("lodash");
-const { match } = require("path-to-regexp");
+import fs from "fs";
+import path from "path";
+import { flatten } from "lodash";
+import { match } from "path-to-regexp";
 
 let config = null;
 let titleMap = null;
@@ -77,10 +77,7 @@ function getPagesInfo(pagePath, dir = "") {
  * @param {string} dir
  */
 function getPageTitle(dir) {
-  if (typeof config.options.pageTitle === "string") {
-    return config.options.pageTitle;
-  }
-  if (typeof config.options.pageTitle === "object") {
+  if (config.options.pageTitle && typeof config.options.pageTitle === "object") {
     const match1 = match(dir.replace(/\\/g, "/"), {
       decode: decodeURIComponent,
     });
@@ -102,4 +99,4 @@ function getPages(initConfig, pagePath) {
   return getPagesInfo(pagePath);
 }
 
-module.exports = getPages;
+export default getPages;

@@ -27,5 +27,4 @@ function removePlugin(webpackConfig) {
   });
   return { HtmlWebpackPlugin, ManifestPlugin };
 }
-
-module.exports = removePlugin;
+export default removePlugin;

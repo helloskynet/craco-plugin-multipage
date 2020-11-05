@@ -11,10 +11,8 @@ function getIndexPage(HtmlWebpackPlugin, pages) {
       templateContent() {
         let html = "<ul>";
         pages.forEach((item) => {
-          if(item.options){
-            html += `<li><a href="${item.options.filename}">${
-              item.options.title
-            }(${item.options.filename})</a></li>`;
+          if (item.options) {
+            html += `<li><a href="${item.options.filename}">${item.options.title}(${item.options.filename})</a></li>`;
           }
         });
         return `${html}</ul>`;
@@ -23,4 +21,4 @@ function getIndexPage(HtmlWebpackPlugin, pages) {
   );
 }
 
-module.exports = getIndexPage;
+export default getIndexPage;

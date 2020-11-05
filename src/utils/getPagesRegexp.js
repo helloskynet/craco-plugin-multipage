@@ -1,4 +1,4 @@
-const { pathToRegexp } = require("path-to-regexp");
+import { pathToRegexp } from "path-to-regexp";
 
 const pages = [];
 
@@ -50,4 +50,4 @@ function getPathRegexp(path) {
   return regexpList;
 }
 
-module.exports = getPagesRegexp;
+export default getPagesRegexp;
