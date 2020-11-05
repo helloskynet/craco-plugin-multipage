@@ -1,6 +1,6 @@
 {
   "name": "craco-plugin-multipage",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "React multi page craco plugin",
   "main": "bin/index.js",
   "files": [

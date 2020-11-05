@@ -126,8 +126,8 @@ Cracte-React-App craco 多页面插件
 | htmlOutputDir            | string             | "pages"     | html 的输出目录，相对于 build 目录                                                                                                                                                                                                                                                          |
 | pages                    | string             | ""          | 指定启动的页面，默认全部，多个时用英文逗号分隔，支持命令行                                                                                                                                                                                                                                  |
 | ignore                   | string             | ""          | 忽略的页面，优先级高于 pages，支持命令行。                                                                                                                                                                                                                                                  |
-| pageTitle                | {object}           | {}          | 页面的 title 分页面配置                                                                                                                                                                                                                                                                     |
-| defaultTitle             | String             | "React App" | 页面默认的 title，pageTitle 匹配不到或者未配置时使用。                                                                                                                                                                                                                                    |
+| pageTitle                | object             | {}          | 页面的 title 分页面配置                                                                                                                                                                                                                                                                     |
+| defaultTitle             | String             | "React App" | 页面默认的 title，pageTitle 匹配不到或者未配置时使用。                                                                                                                                                                                                                                      |
 | HtmlWebpackPluginOptions | {object\|Function} | {}          | HtmlWebpackPlugin 的配置，为 Object 时可以覆盖除 title、chunks、filename 之外的其他属性；为 Function 时,每个页面都会调用它，入参为原 HtmlWebpackPlugin 的 Config 需要返回一个新的 HtmlWebpackPlugin 的 Config，关于[HtmlWebpackPlugin](https://github.com/jantimon/html-webpack-plugin)配置 |
 
 ### htmlOutputDir
@@ -195,7 +195,7 @@ npm run build -- --pages page1,page3/(.*) --ignore page3/page4
 
 ### pageTitle 和 defaultTitle
 
-页面的 title，默认为"React App"，pageTitle 为 object 时，如果页面未匹配到 title，则使用 defaultTitle。
+页面的 title，默认为{}，pageTitle 如果页面未匹配到 title，则使用 defaultTitle。
 
 ```js
 // craco.config.js
