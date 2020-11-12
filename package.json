@@ -1,9 +1,13 @@
 {
   "name": "craco-plugin-multipage",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "React multi page craco plugin",
-  "main": "src/index.js",
+  "main": "bin/index.js",
+  "files": [
+    "bin"
+  ],
   "scripts": {
+    "build": "rollup -c",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -30,5 +34,9 @@
     "@craco/craco": "^5.*",
     "path-to-regexp": "^6.*",
     "lodash": "^4.*"
+  },
+  "devDependencies": {
+    "rollup": "^2.33.1",
+    "rollup-plugin-node-resolve": "^5.2.0"
   }
 }

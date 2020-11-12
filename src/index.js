@@ -1,12 +1,12 @@
 /* craco-plugin-multipage */
 
-const { whenDev } = require("@craco/craco");
-const getOptions = require("./utils/options");
-const removePlugin = require("./utils/removePlugin");
-const getPagesInfo = require("./utils/getPagesInfo");
-const getPagesReg = require("./utils/getPagesRegexp");
-const getWebpackConfig = require("./utils/getWebpackConfig");
-const getIndexPage = require("./indexpage/index");
+import { whenDev } from "@craco/craco";
+import getOptions from "./utils/options";
+import removePlugin from "./utils/removePlugin";
+import getPagesInfo from "./utils/getPagesInfo";
+import getPagesReg from "./utils/getPagesRegexp";
+import getWebpackConfig from "./utils/getWebpackConfig";
+import getIndexPage from "./indexpage/index";
 
 module.exports = {
   overrideWebpackConfig: ({
@@ -41,9 +41,7 @@ module.exports = {
     whenDev(() => {
       webpackConfig.output.filename = "static/js/[name].bundle.js";
       // 添加索引页面
-      webpackConfig.plugins.unshift(
-        getIndexPage(HtmlWebpackPlugin, plugins)
-      );
+      webpackConfig.plugins.unshift(getIndexPage(HtmlWebpackPlugin, plugins));
     });
 
     // Always return the config object.

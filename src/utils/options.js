@@ -1,10 +1,10 @@
-const program = require("commander");
-const { isString, isObject, isFunction } = require("lodash");
+import program from "commander";
+import { isString, isObject, isFunction } from "lodash";
 
 const defaultOptions = {
   pages: "",
   ignore: "",
-  pageTitle: "React App",
+  pageTitle: {},
   defaultTitle: "React App",
   htmlOutputDir: "pages",
   HtmlWebpackPluginOptions: {},
@@ -42,42 +42,47 @@ function getOptions(paths, pluginOptions = {}) {
 }
 
 function checkOptions(options) {
-  if (options.hasOwnProperty('pages') && !isString(options.pages)) {
+  if (options.hasOwnProperty("pages") && !isString(options.pages)) {
     console.log(
       "pages 必须为string类型，请检查配置！(pages`s type should be a string)"
     );
     process.exit(1);
   }
-  if (options.hasOwnProperty('ignore') && !isString(options.ignore)) {
+  if (options.hasOwnProperty("ignore") && !isString(options.ignore)) {
     console.log(
       "ignore 必须为string类型，请检查配置！(ignore`s type should be a string)"
     );
     process.exit(1);
   }
-  if (options.hasOwnProperty("defaultTitle") && !isString(options.defaultTitle)) {
+  if (
+    options.hasOwnProperty("defaultTitle") &&
+    !isString(options.defaultTitle)
+  ) {
     console.log(
       "defaultTitle 必须为string类型，请检查配置！(defaultTitle`s type should be a string)"
     );
     process.exit(1);
   }
-  if (options.hasOwnProperty('htmlOutputDir') && !isString(options.htmlOutputDir)) {
+  if (
+    options.hasOwnProperty("htmlOutputDir") &&
+    !isString(options.htmlOutputDir)
+  ) {
     console.log(
       "htmlOutputDir 必须为string类型，请检查配置！(htmlOutputDir`s type should be a string)"
     );
     process.exit(1);
   }
   if (
-    options.hasOwnProperty('pageTitle') &&
-    !isString(options.pageTitle) &&
+    options.hasOwnProperty("pageTitle") &&
     !isObject(options.pageTitle)
   ) {
     console.log(
-      "pageTitle 必须为{string|object}类型，请检查配置！(pageTitle`s type should be a {string|object})"
+      "pageTitle 必须为{object}类型，请检查配置！(pageTitle`s type should be a {object})"
     );
     process.exit(1);
   }
   if (
-    options.hasOwnProperty('HtmlWebpackPluginOptions') &&
+    options.hasOwnProperty("HtmlWebpackPluginOptions") &&
     !isFunction(options.HtmlWebpackPluginOptions) &&
     !isObject(options.HtmlWebpackPluginOptions)
   ) {
@@ -88,4 +93,4 @@ function checkOptions(options) {
   }
 }
 
-module.exports = getOptions;
+export default getOptions;

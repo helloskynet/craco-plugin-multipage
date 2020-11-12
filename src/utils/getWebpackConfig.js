@@ -1,6 +1,6 @@
-const { whenDev } = require("@craco/craco");
-const { sep } = require("path");
-const { isObject, isFunction } = require("lodash");
+import { whenDev } from "@craco/craco";
+import { sep } from "path";
+import { isObject, isFunction } from "lodash";
 
 function getWebpackConfig(
   pages = [],
@@ -72,4 +72,4 @@ function getWebpackConfig(
   };
 }
 
-module.exports = getWebpackConfig;
+export default getWebpackConfig;
