@@ -1,0 +1,49 @@
+{
+  "definitions": {
+    "String1": {
+      "description": "该属性必须为string类型，请检查配置！(this property`s type should be a string)",
+      "type": "string"
+    },
+    "PageTitle": {
+      "description": "指定编译的页面 pageTitle 必须为 object类型，请检查配置！(pageTitle`s type should be a object)",
+      "type": "object"
+    },
+    "HtmlWebpackPluginOptions": {
+      "description": "HtmlWebpackPluginOptions 必须为object或者Function！",
+      "anyOf": [
+        {
+          "type": "object"
+        },
+        {
+          "instanceof": "Function"
+        }
+      ]
+    }
+  },
+  "decscription": "Options object as provided by the user",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "pages": {
+      "$ref": "#/definitions/String1"
+    },
+    "appSrc": {
+      "$ref": "#/definitions/String1"
+    },
+    "ignore": {
+      "$ref": "#/definitions/String1"
+    },
+    "pageTitle": {
+      "$ref": "#/definitions/PageTitle"
+    },
+    "defaultTitle": {
+      "$ref": "#/definitions/String1"
+    },
+    "htmlOutputDir": {
+      "$ref": "#/definitions/String1"
+    },
+    "HtmlWebpackPluginOptions": {
+      "$ref": "#/definitions/HtmlWebpackPluginOptions"
+    }
+  }
+}

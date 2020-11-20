@@ -7,6 +7,7 @@ import getPagesInfo from "./utils/getPagesInfo";
 import getPagesReg from "./utils/getPagesRegexp";
 import getWebpackConfig from "./utils/getWebpackConfig";
 import getIndexPage from "./indexpage/index";
+import logger from "./utils/logger";
 
 module.exports = {
   overrideWebpackConfig: ({
@@ -15,14 +16,21 @@ module.exports = {
     pluginOptions,
     context: { paths },
   }) => {
-    const options = getOptions(paths, pluginOptions);
+    let options = {};
+    try {
+      options = getOptions(paths, pluginOptions);
+    } catch (e) {
+      logger.error(e.message);
+      process.exit(0);
+    }
+
     const pagesRegexp = getPagesReg(options);
 
     // 移除原有的 plugin
     const { HtmlWebpackPlugin, ManifestPlugin } = removePlugin(webpackConfig);
-    const pages = getPagesInfo({ pagesRegexp, paths, options }, paths.appSrc);
+    const pages = getPagesInfo({ pagesRegexp, paths, options }, options.appSrc);
     if (pages.length === 0) {
-      console.error("没有找到任何入口！(Can`t find any entry!)");
+      logger.error("没有找到任何入口！(Can`t find any entry!)");
       process.exit(1);
     }
     // 生成新的 webpackConfig

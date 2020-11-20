@@ -1,6 +1,6 @@
 {
   "name": "craco-plugin-multipage",
-  "version": "0.1.5",
+  "version": "0.1.31",
   "description": "React multi page craco plugin",
   "main": "bin/index.js",
   "files": [
@@ -32,10 +32,14 @@
   },
   "dependencies": {
     "@craco/craco": "^5.*",
-    "path-to-regexp": "^6.*",
-    "lodash": "^4.*"
+    "ajv": "^6.12.6",
+    "ajv-keywords": "^3.5.2",
+    "colorette": "^1.2.1",
+    "lodash": "^4.*",
+    "path-to-regexp": "^6.*"
   },
   "devDependencies": {
+    "@rollup/plugin-json": "^4.1.0",
     "rollup": "^2.33.1",
     "rollup-plugin-node-resolve": "^5.2.0"
   }

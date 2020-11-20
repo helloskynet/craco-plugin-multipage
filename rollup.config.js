@@ -1,4 +1,5 @@
 import resolve from "rollup-plugin-node-resolve";
+import pluginJson from "@rollup/plugin-json";
 
 export default {
   input: "./src/index.js",
@@ -6,7 +7,7 @@ export default {
     file: "./bin/index.js",
     format: "cjs",
   },
-  plugins: [resolve()],
+  plugins: [resolve(), pluginJson()],
   external: [
     "@craco/craco",
     "lodash",
@@ -14,5 +15,7 @@ export default {
     "fs",
     "path",
     "path-to-regexp",
+    "ajv",
+    "ajv-keywords",
   ],
 };

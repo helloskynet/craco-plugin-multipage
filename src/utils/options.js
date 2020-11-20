@@ -1,7 +1,9 @@
 import program from "commander";
-import { isString, isObject, isFunction } from "lodash";
+import validateSchema from "../lib/validateSchema";
+import pluginOptionsSchema from "../schemas/options";
 
 const defaultOptions = {
+  appSrc:'',
   pages: "",
   ignore: "",
   pageTitle: {},
@@ -18,7 +20,7 @@ const defaultOptions = {
 function getOptions(paths, pluginOptions = {}) {
   /* eslint-disable import/no-dynamic-require */
   const packages = require(paths.appPackageJson);
-  checkOptions(pluginOptions);
+  defaultOptions.appSrc = paths.appSrc;
 
   program
     .version(packages.version)
@@ -38,59 +40,15 @@ function getOptions(paths, pluginOptions = {}) {
     ignore = `${ignore},${pluginOptions.ignore}`;
   }
 
-  return Object.assign({}, defaultOptions, pluginOptions, { pages, ignore });
-}
+  const config =  Object.assign({}, defaultOptions, pluginOptions, { pages, ignore });
 
-function checkOptions(options) {
-  if (options.hasOwnProperty("pages") && !isString(options.pages)) {
-    console.log(
-      "pages 必须为string类型，请检查配置！(pages`s type should be a string)"
-    );
-    process.exit(1);
+  try {
+    validateSchema(pluginOptionsSchema, config);
+  } catch (e) {
+    throw e;
   }
-  if (options.hasOwnProperty("ignore") && !isString(options.ignore)) {
-    console.log(
-      "ignore 必须为string类型，请检查配置！(ignore`s type should be a string)"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("defaultTitle") &&
-    !isString(options.defaultTitle)
-  ) {
-    console.log(
-      "defaultTitle 必须为string类型，请检查配置！(defaultTitle`s type should be a string)"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("htmlOutputDir") &&
-    !isString(options.htmlOutputDir)
-  ) {
-    console.log(
-      "htmlOutputDir 必须为string类型，请检查配置！(htmlOutputDir`s type should be a string)"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("pageTitle") &&
-    !isObject(options.pageTitle)
-  ) {
-    console.log(
-      "pageTitle 必须为{object}类型，请检查配置！(pageTitle`s type should be a {object})"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("HtmlWebpackPluginOptions") &&
-    !isFunction(options.HtmlWebpackPluginOptions) &&
-    !isObject(options.HtmlWebpackPluginOptions)
-  ) {
-    console.log(
-      "HtmlWebpackPluginOptions 必须为{function|object}类型，请检查配置！(HtmlWebpackPluginOptions`s type should be a {function|object})"
-    );
-    process.exit(1);
-  }
+
+  return config;
 }
 
 export default getOptions;

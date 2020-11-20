@@ -2,21 +2,271 @@
 
 var craco = require('@craco/craco');
 var program = require('commander');
-var lodash = require('lodash');
+var Ajv = require('ajv');
+var AjvKeywords = require('ajv-keywords');
 var fs = require('fs');
 var path = require('path');
+var lodash = require('lodash');
 var pathToRegexp = require('path-to-regexp');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
 var program__default = /*#__PURE__*/_interopDefaultLegacy(program);
+var Ajv__default = /*#__PURE__*/_interopDefaultLegacy(Ajv);
+var AjvKeywords__default = /*#__PURE__*/_interopDefaultLegacy(AjvKeywords);
 var fs__default = /*#__PURE__*/_interopDefaultLegacy(fs);
 var path__default = /*#__PURE__*/_interopDefaultLegacy(path);
 
+function indent(str, prefix) {
+  return str.replace(/\n(?!$)/g, `\n${prefix}`);
+}
+
+class PluginError extends Error {
+  constructor(errors, schema, configuration) {
+    super();
+
+    this.name = "pluginError";
+
+    this.errors = errors;
+
+    this.headerName = configuration.name;
+
+    this.baseDataPath = configuration.baseDataPath || "configuration";
+
+    const header = `Invalid ${this.baseDataPath} object. ${
+      this.headerName
+    } has been initialized using ${getArticle(this.baseDataPath)} ${
+      this.baseDataPath
+    } object that does not match the API schema.\n`;
+
+    this.message = `${header}${this.formatValidationErrors(errors)}`;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+  formatValidationErrors(errors) {
+    return errors
+      .map((error) => {
+        let formattedError = this.formatValidationError(error);
+
+        return ` - ${formattedError}`;
+      })
+      .join("\n");
+  }
+
+  formatValidationError(error) {
+    const { keyword, dataPath: errorDataPath } = error;
+
+    const dataPath = `${this.baseDataPath}${errorDataPath}`;
+    switch (keyword) {
+      case "type": {
+        const { parentSchema, params } = error; // eslint-disable-next-line default-case
+
+        switch (params.type) {
+          case "string":
+            return `${dataPath} should be a ${this.getSchemaPartText(
+              parentSchema
+            )}`;
+
+          case "boolean":
+            return `${dataPath} should be a ${this.getSchemaPartText(
+              parentSchema
+            )}`;
+
+          case "object":
+            return `${dataPath} should be an object:${this.getSchemaPartText(
+              parentSchema
+            )}`;
+
+          default:
+            return `${dataPath} should be:\n${this.getSchemaPartText(
+              parentSchema
+            )}`;
+        }
+      }
+      case "anyOf": {
+        const { parentSchema, children } = error;
+
+        if (children && children.length > 0) {
+          return `${dataPath} should be one of these:\n${this.getSchemaPartText(
+            parentSchema
+          )}\nDetails:\n${children
+            .map(
+              (nestedError) =>
+                ` * ${indent(this.formatValidationError(nestedError), "   ")}`
+            )
+            .join("\n")}`;
+        }
+
+        return `${dataPath} should be one of these:\n${this.getSchemaPartText(
+          parentSchema
+        )}`;
+      }
+
+      case "instanceof": {
+        const { parentSchema } = error;
+        return `${dataPath} should be an instance of ${this.getSchemaPartText(
+          parentSchema
+        )}`;
+      }
+
+      case "additionalProperties": {
+        const { params, parentSchema } = error;
+        const { additionalProperty } = params;
+        return `${dataPath} has an unknown property '${additionalProperty}'. These properties are valid:\n${this.getSchemaPartText(
+          parentSchema
+        )}`;
+      }
+    }
+  }
+  getSchemaPartText(schema) {
+    if (schema.anyOf) {
+      return "";
+    }
+    if (schema.type) {
+      return schema.type;
+    }
+    let str = "{";
+    if (schema.properties) {
+      Object.keys().forEach((item) => {
+        str += item + "?,";
+      });
+    }
+    if (schema.instanceof) {
+      const { instanceof: value } = schema;
+      const values = !Array.isArray(value) ? [value] : value;
+      str += values
+        .map((item) => (item === "Function" ? "function" : item))
+        .join(" | ");
+    }
+
+    return `${str} }`;
+  }
+}
+
+function getArticle(type) {
+  if (/^[aeiou]/i.test(type)) {
+    return "an";
+  }
+
+  return "a";
+}
+
+const ajv = new Ajv__default['default']({
+  allErrors: true,
+  verbose: true,
+  $data: true,
+});
+
+AjvKeywords__default['default'](ajv, ["instanceof"]);
+
+function validateObject(schema, options) {
+  const compiledSchema = ajv.compile(schema);
+  const valid = compiledSchema(options);
+  if (valid) {
+    return [];
+  }
+  return compiledSchema.errors ? filterErrors(compiledSchema.errors) : [];
+}
+
+function filterErrors(errors) {
+  let newErrors = [];
+
+  for (const error of errors) {
+    const { dataPath } = error;
+    let children = [];
+    newErrors = newErrors.filter((oldError) => {
+      if (oldError.dataPath.includes(dataPath)) {
+        if (oldError.children) {
+          children = children.concat(oldError.children.slice(0));
+        }
+        oldError.children = undefined;
+        children.push(oldError);
+        return false;
+      }
+      return true;
+    });
+
+    if(children.length){
+      error.children = children;
+    }
+    newErrors.push(error);
+  }
+  return newErrors;
+}
+
+function validate(schema, options, configuration) {
+  const errors = validateObject(schema, options);
+  if (errors.length > 0) {
+    throw new PluginError(errors, schema, configuration);
+  }
+}
+
+const validateSchema = (schema, options) => {
+  validate(schema, options, {
+    name: "craco-plugin-multipage",
+  });
+};
+
+var definitions = {
+	String1: {
+		description: "该属性必须为string类型，请检查配置！(this property`s type should be a string)",
+		type: "string"
+	},
+	PageTitle: {
+		description: "指定编译的页面 pageTitle 必须为 object类型，请检查配置！(pageTitle`s type should be a object)",
+		type: "object"
+	},
+	HtmlWebpackPluginOptions: {
+		description: "HtmlWebpackPluginOptions 必须为object或者Function！",
+		anyOf: [
+			{
+				type: "object"
+			},
+			{
+				"instanceof": "Function"
+			}
+		]
+	}
+};
+var decscription = "Options object as provided by the user";
+var type = "object";
+var additionalProperties = false;
+var properties = {
+	pages: {
+		$ref: "#/definitions/String1"
+	},
+	appSrc: {
+		$ref: "#/definitions/String1"
+	},
+	ignore: {
+		$ref: "#/definitions/String1"
+	},
+	pageTitle: {
+		$ref: "#/definitions/PageTitle"
+	},
+	defaultTitle: {
+		$ref: "#/definitions/String1"
+	},
+	htmlOutputDir: {
+		$ref: "#/definitions/String1"
+	},
+	HtmlWebpackPluginOptions: {
+		$ref: "#/definitions/HtmlWebpackPluginOptions"
+	}
+};
+var pluginOptionsSchema = {
+	definitions: definitions,
+	decscription: decscription,
+	type: type,
+	additionalProperties: additionalProperties,
+	properties: properties
+};
+
 const defaultOptions = {
+  appSrc:'',
   pages: "",
   ignore: "",
-  pageTitle: "React App",
+  pageTitle: {},
   defaultTitle: "React App",
   htmlOutputDir: "pages",
   HtmlWebpackPluginOptions: {},
@@ -30,7 +280,7 @@ const defaultOptions = {
 function getOptions(paths, pluginOptions = {}) {
   /* eslint-disable import/no-dynamic-require */
   const packages = require(paths.appPackageJson);
-  checkOptions(pluginOptions);
+  defaultOptions.appSrc = paths.appSrc;
 
   program__default['default']
     .version(packages.version)
@@ -50,60 +300,15 @@ function getOptions(paths, pluginOptions = {}) {
     ignore = `${ignore},${pluginOptions.ignore}`;
   }
 
-  return Object.assign({}, defaultOptions, pluginOptions, { pages, ignore });
-}
+  const config =  Object.assign({}, defaultOptions, pluginOptions, { pages, ignore });
 
-function checkOptions(options) {
-  if (options.hasOwnProperty("pages") && !lodash.isString(options.pages)) {
-    console.log(
-      "pages 必须为string类型，请检查配置！(pages`s type should be a string)"
-    );
-    process.exit(1);
+  try {
+    validateSchema(pluginOptionsSchema, config);
+  } catch (e) {
+    throw e;
   }
-  if (options.hasOwnProperty("ignore") && !lodash.isString(options.ignore)) {
-    console.log(
-      "ignore 必须为string类型，请检查配置！(ignore`s type should be a string)"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("defaultTitle") &&
-    !lodash.isString(options.defaultTitle)
-  ) {
-    console.log(
-      "defaultTitle 必须为string类型，请检查配置！(defaultTitle`s type should be a string)"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("htmlOutputDir") &&
-    !lodash.isString(options.htmlOutputDir)
-  ) {
-    console.log(
-      "htmlOutputDir 必须为string类型，请检查配置！(htmlOutputDir`s type should be a string)"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("pageTitle") &&
-    !lodash.isString(options.pageTitle) &&
-    !lodash.isObject(options.pageTitle)
-  ) {
-    console.log(
-      "pageTitle 必须为{string|object}类型，请检查配置！(pageTitle`s type should be a {string|object})"
-    );
-    process.exit(1);
-  }
-  if (
-    options.hasOwnProperty("HtmlWebpackPluginOptions") &&
-    !lodash.isFunction(options.HtmlWebpackPluginOptions) &&
-    !lodash.isObject(options.HtmlWebpackPluginOptions)
-  ) {
-    console.log(
-      "HtmlWebpackPluginOptions 必须为{function|object}类型，请检查配置！(HtmlWebpackPluginOptions`s type should be a {function|object})"
-    );
-    process.exit(1);
-  }
+
+  return config;
 }
 
 /**
@@ -210,10 +415,7 @@ function getPagesInfo(pagePath, dir = "") {
  * @param {string} dir
  */
 function getPageTitle(dir) {
-  if (typeof config.options.pageTitle === "string") {
-    return config.options.pageTitle;
-  }
-  if (typeof config.options.pageTitle === "object") {
+  if (config.options.pageTitle && typeof config.options.pageTitle === "object") {
     const match1 = pathToRegexp.match(dir.replace(/\\/g, "/"), {
       decode: decodeURIComponent,
     });
@@ -378,6 +580,18 @@ function getIndexPage(HtmlWebpackPlugin, pages) {
   );
 }
 
+const util = require('util');
+const { red, cyan, yellow, green } = require('colorette');
+
+var logger = {
+    error: (val) => console.error(`[craco-plugin-multipage] ${red(util.format(val))}`),
+    warn: (val) => console.warn(`[craco-plugin-multipage] ${yellow(val)}`),
+    info: (val) => console.info(`[craco-plugin-multipage] ${cyan(val)}`),
+    success: (val) => console.log(`[craco-plugin-multipage] ${green(val)}`),
+    log: (val) => console.log(`[craco-plugin-multipage] ${val}`),
+    raw: (val) => console.log(val),
+};
+
 /* craco-plugin-multipage */
 
 module.exports = {
@@ -387,14 +601,21 @@ module.exports = {
     pluginOptions,
     context: { paths },
   }) => {
-    const options = getOptions(paths, pluginOptions);
+    let options = {};
+    try {
+      options = getOptions(paths, pluginOptions);
+    } catch (e) {
+      logger.error(e.message);
+      process.exit(0);
+    }
+
     const pagesRegexp = getPagesRegexp(options);
 
     // 移除原有的 plugin
     const { HtmlWebpackPlugin, ManifestPlugin } = removePlugin(webpackConfig);
-    const pages = getPages({ pagesRegexp, paths, options }, paths.appSrc);
+    const pages = getPages({ pagesRegexp, paths, options }, options.appSrc);
     if (pages.length === 0) {
-      console.error("没有找到任何入口！(Can`t find any entry!)");
+      logger.error("没有找到任何入口！(Can`t find any entry!)");
       process.exit(1);
     }
     // 生成新的 webpackConfig
